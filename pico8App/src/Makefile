@@ -16,9 +16,11 @@ LIBRARY_IOC += pico8
 DBD += pico8.dbd
 
 # specify all source files to be compiled and added to the library
-#pico8_SRCS += xxx
+pico8_SRCS += pico8.cpp
 
 pico8_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+include $(ADCORE)/ADApp/commonLibraryMakefile
 
 #===========================
 
