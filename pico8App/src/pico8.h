@@ -40,12 +40,24 @@ public:
     /* These methods override the virtual methods in the base class */
     asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
-    asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value,
+    asynStatus readFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
                                         size_t nElements, size_t *nIn);
     virtual void report(FILE *fp, int details);
 
     // Should be private, but are called from C so must be public
     void dataTask(void);
+
+private:
+	int openDevice();
+	void closeDevice();
+	int readDevice(uint32_t samp, uint32_t *count);
+	int setFSamp(uint32_t val);
+	int setRange(uint8_t val);
+	int getBTrans(uint32_t *val);
+	int setGateMux(uint32_t val);
+	int setConvMux(uint32_t val);
+	int setRingBuf(uint32_t val);
+	int setTrigger(float level, int32_t length, int32_t ch, int32_t mode);
 
 protected:
     int Pico8Range;
@@ -65,9 +77,12 @@ protected:
     #define LAST_PICO8_PARAM Pico8DummyEnd
 
 private:
+	int mHandle;
+	void *mDataBuf;
     epicsEventId mDataEvent;
     unsigned int mAcquiringData;
     unsigned int mFinish;
+    char mDevicePath[PICO8_BUFFER_SIZE];
     char mManufacturerName[PICO8_BUFFER_SIZE];
     char mDeviceName[PICO8_BUFFER_SIZE];
     char mSerialNumber[PICO8_BUFFER_SIZE];

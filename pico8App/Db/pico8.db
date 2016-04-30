@@ -131,7 +131,7 @@ record(mbbo, "$(P)$(R)TrgCh")
 # Internal trigger level in counts.
 record(ai, "$(P)$(R)TrgLevel_RBV")
 {
-    field(DTYP, "asynFloat64")
+    field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLEVEL")
     field(PREC, "1")
     field(SCAN, "I/O Intr")
@@ -139,7 +139,7 @@ record(ai, "$(P)$(R)TrgLevel_RBV")
 
 record(ao, "$(P)$(R)TrgLevel")
 {
-    field(DTYP, "asynFloat64")
+    field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLEVEL")
     field(PREC, "1")
 #    field(VAL,  "100.0")

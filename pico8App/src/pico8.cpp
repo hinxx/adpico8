@@ -12,6 +12,11 @@
 #include <errno.h>
 #include <time.h>
 #include <math.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <assert.h>
 
 #include <epicsString.h>
 #include <epicsMutex.h>
@@ -38,6 +43,131 @@ static void dataTaskC(void *drvPvt) {
 	pPvt->dataTask();
 }
 
+int Pico8::openDevice() {
+	int ret;
+	
+	ret = open(mDevicePath, O_RDWR);
+	if (ret == -1) {
+		fprintf(stderr, "open() failed: %s\n", strerror(errno));
+		return ret;
+	}
+	
+	mHandle = ret;
+	return 0;
+}
+
+void Pico8::closeDevice() {
+	if (mHandle > 0) {
+		close(mHandle);
+	}
+	mHandle = -1;
+}
+
+int Pico8::readDevice(uint32_t samp, uint32_t *count) {
+	int ret;
+	uint32_t btrans;
+	
+	/* read samples of 4 bytes each for all 8 channels */
+	ret = read(mHandle, mDataBuf, samp * 8 * 4);
+	if (ret == -1) {
+		fprintf(stderr, "read() failed: %s\n", strerror(errno));
+		return ret;
+	}
+	
+	btrans = 0;
+	ret = this->getBTrans(&btrans);
+	if (ret == -1) {
+		return ret;
+	}
+	*count = btrans;
+	
+	return 0;
+}
+	
+int Pico8::setFSamp(uint32_t val) {
+	int ret;
+	ret = ioctl(mHandle, SET_FSAMP, &val);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl() SET_FSAMP failed: %s\n", strerror(errno));
+		return ret;
+	}
+
+	return 0;
+}
+
+int Pico8::setRange(uint8_t val) {
+	int ret;
+	ret = ioctl(mHandle, SET_RANGE, &val);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl() SET_RANGE failed: %s\n", strerror(errno));
+		return ret;
+	}
+
+	return 0;
+}
+
+int Pico8::getBTrans(uint32_t *val) {
+	int ret;
+	ret = ioctl(mHandle, GET_B_TRANS, val);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl() GET_B_TRANS failed: %s\n", strerror(errno));
+		return ret;
+	}
+
+	return 0;
+}
+
+int Pico8::setGateMux(uint32_t val) {
+	int ret;
+	ret = ioctl(mHandle, SET_GATE_MUX, &val);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl() SET_GATE_MUX failed: %s\n", strerror(errno));
+		return ret;
+	}
+
+	return 0;
+}
+
+int Pico8::setConvMux(uint32_t val) {
+	int ret;
+	ret = ioctl(mHandle, SET_CONV_MUX, &val);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl() SET_CONV_MUX failed: %s\n", strerror(errno));
+		return ret;
+	}
+
+	return 0;
+}
+
+int Pico8::setRingBuf(uint32_t val) {
+	int ret;
+	ret = ioctl(mHandle, SET_RING_BUF, &val);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl() SET_RING_BUF failed: %s\n", strerror(errno));
+		return ret;
+	}
+
+	return 0;
+}
+
+int Pico8::setTrigger(float level, int32_t length, int32_t ch, int32_t mode) {
+	int ret;
+	struct trg_ctrl val;
+	
+	val.limit = level;
+	val.nr_samp = length;
+	val.ch_sel = ch;
+	val.mode = (trg_mode)mode;
+	
+	ret = ioctl(mHandle, SET_TRG, &val);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl() SET_TRG failed: %s\n", strerror(errno));
+		return ret;
+	}
+
+	return 0;
+}
+
 void Pico8::dataTask(void) {
 	int acquireStatus;
 	int acquiring = 0;
@@ -52,10 +182,17 @@ void Pico8::dataTask(void) {
 
 	sleep(5);
 
-	printf("%s:%s: Data thread started...\n", driverName, functionName);
-
 	this->lock();
 
+	if (mHandle == -1) {
+		printf("%s:%s: Data thread will not start...\n", driverName, functionName);
+		this->mFinish = 1;
+		this->unlock();
+		return;
+	}
+
+	printf("%s:%s: Data thread started...\n", driverName, functionName);
+	
 	while (1) {
 
 		//Wait for event from main thread to signal that data acquisition has started.
@@ -172,6 +309,10 @@ asynStatus Pico8::readInt32(asynUser *pasynUser, epicsInt32 *value)
 
 asynStatus Pico8::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
+	int trgMode;
+	int trgLevel;
+	int trgLength;
+	int trgCh;
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
     int addr = 0;
@@ -184,20 +325,45 @@ asynStatus Pico8::writeInt32(asynUser *pasynUser, epicsInt32 value)
 
     /* Set the parameter and readback in the parameter library.  This may be overwritten when we read back the
      * status at the end, but that's OK */
-    status = setDoubleParam(addr, function, value);
+    status = setIntegerParam(addr, function, value);
 
     /* Do param handling here */
     if (function == Pico8Range) {
+    	/* XXX: How to collect proper bitfield?!?!*/
+    	assert(1 != 0);
+    	this->setRange(value);
     } else if (function == Pico8FSamp) {
-    } else if (function == Pico8BTrans) {
-    } else if (function == Pico8TrgMode) {
-    } else if (function == Pico8TrgCh) {
-    } else if (function == Pico8TrgLevel) {
-    } else if (function == Pico8TrgLength) {
+    	this->setFSamp(value);
+    } else if (function == Pico8TrgMode
+    		|| function == Pico8TrgCh
+    		|| function == Pico8TrgLevel
+    		|| function == Pico8TrgLength) {
+		status = (asynStatus) getIntegerParam(addr, Pico8TrgMode, &trgMode);
+		status = (asynStatus) getIntegerParam(addr, Pico8TrgLength, &trgLength);
+		status = (asynStatus) getIntegerParam(addr, Pico8TrgCh, &trgCh);
+		status = (asynStatus) getIntegerParam(addr, Pico8TrgLevel, &trgLevel);
+		if (function == Pico8TrgMode) {
+			trgMode = value;
+		} else if (function == Pico8TrgCh) {
+			trgCh = value;
+		} else if (function == Pico8TrgLevel) {
+			trgLevel = (float)value;
+		} else if (function == Pico8TrgLength) {
+			trgLength = value;
+		}
+    	this->setTrigger(trgLevel, trgLength, trgCh, trgMode);
     } else if (function == Pico8RingBuf) {
+	    if (value > 1023) {
+	    	value = 1023;
+	    }
+	    if (value < 0) {
+	    	value = 0;
+	    }
+    	this->setRingBuf(value);
     } else if (function == Pico8GateMux) {
+    	this->setGateMux(value);
     } else if (function == Pico8ConvMux) {
-
+		this->setConvMux(value);
     } else if (function < FIRST_PICO8_PARAM) {
 		/* If this parameter belongs to a base class call its method */
     	status = ADDriver::writeInt32(pasynUser, value);
@@ -227,7 +393,7 @@ asynStatus Pico8::writeInt32(asynUser *pasynUser, epicsInt32 value)
  * \param[in] value Value to read.
  * \param[in] nElements Number of values to read.
  * \param[in] nIn Number of values read. */
-asynStatus Pico8::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
+asynStatus Pico8::readFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
 		size_t nElements, size_t *nIn) {
 
 	int function = pasynUser->reason;
@@ -241,9 +407,9 @@ asynStatus Pico8::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
     }
 
 	if (function == Pico8Data) {
-
+		/* XXX: Handle data readout .. */
 	} else {
-		status = ADDriver::readInt32Array(pasynUser, value, nElements, nIn);
+		status = ADDriver::readFloat32Array(pasynUser, value, nElements, nIn);
 	}
 
 	if (status)
@@ -304,22 +470,27 @@ Pico8::Pico8(const char *portName, int maxBuffers, size_t maxMemory,
 				const char *devicePath, int priority, int stackSize)
     /* Invoke the base class constructor */
     : ADDriver(portName, PICO8_NR_CHANNELS + 1, NUM_PICO8_PARAMS, maxBuffers, maxMemory,
-                   asynFloat32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask,
-                   asynFloat32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask,
+                   asynFloat32ArrayMask | asynGenericPointerMask,
+                   asynFloat32ArrayMask | asynGenericPointerMask,
 				   ASYN_MULTIDEVICE, 1, priority, stackSize)
 {
 	int status = asynSuccess;
     static const char *functionName = "Pico8";
 	
+	mHandle = -1;
+	mDataBuf = calloc(PICO8_MAX_SAMPLES * 8, sizeof(float));
+	
 	/* Create an EPICS exit handler */
 	epicsAtExit(exitHandler, this);
 
+	openDevice();
+	
     createParam(Pico8RangeString,            asynParamInt32,       &Pico8Range);
     createParam(Pico8FSampString,            asynParamInt32,       &Pico8FSamp);
     createParam(Pico8BTransString,           asynParamInt32,       &Pico8BTrans);
     createParam(Pico8TrgModeString,          asynParamInt32,       &Pico8TrgMode);
     createParam(Pico8TrgChString,            asynParamInt32,       &Pico8TrgCh);
-    createParam(Pico8TrgLevelString,         asynParamFloat64,     &Pico8TrgLevel);
+    createParam(Pico8TrgLevelString,         asynParamInt32,       &Pico8TrgLevel);
     createParam(Pico8TrgLengthString,        asynParamInt32,       &Pico8TrgLength);
     createParam(Pico8RingBufString,          asynParamInt32,       &Pico8RingBuf);
     createParam(Pico8GateMuxString,          asynParamInt32,       &Pico8GateMux);
@@ -362,7 +533,7 @@ Pico8::Pico8(const char *portName, int maxBuffers, size_t maxMemory,
 	status |= setIntegerParam(Pico8BTrans, 0);
 	status |= setIntegerParam(Pico8TrgMode, 0);
 	status |= setIntegerParam(Pico8TrgCh, 0);
-	status |= setDoubleParam(Pico8TrgLevel, 100.0);
+	status |= setIntegerParam(Pico8TrgLevel, 100);
 	status |= setIntegerParam(Pico8TrgLength, 10);
 	status |= setIntegerParam(Pico8FSamp, 100000);
 	status |= setIntegerParam(Pico8RingBuf, 0);
@@ -401,14 +572,22 @@ Pico8::~Pico8() {
 
 	this->lock();
 
-	/* make sure threads are cleanly stopped */
-	printf("Waiting for threads...\n");
-	this->mFinish = 1;
-	epicsEventSignal(mDataEvent);
-	sleep(1);
-	printf("Threads are down!\n");
-
+	if (this->mFinish == 0) {
+		/* make sure data thread is cleanly stopped */
+		printf("Waiting for data thread...\n");
+		this->mFinish = 1;
+		epicsEventSignal(mDataEvent);
+		sleep(1);
+		printf("Data thread is down!\n");
+	} else {
+		printf("Data thread is already down!\n");
+	}
+	
+	free(mDataBuf);
+	closeDevice();
+	
 	this->unlock();
+	printf("Pico8 shutdown complete!\n");	
 }
 
 /**

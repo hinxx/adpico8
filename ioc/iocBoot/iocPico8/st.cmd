@@ -60,8 +60,8 @@ dbLoadRecords("$(PICO8)/db/pico8_ch.db",    "P=$(PREFIX),R=ch8:,PORT=$(PORT),ADD
 # Load an NDFile database.  This is not supported for the simDetector which does not write files.
 #dbLoadRecords("NDFile.template","P=$(PREFIX),R=acq:,PORT=PICO8,ADDR=0,TIMEOUT=1")
 
-NDStdArraysConfigure("Trace1", 3, 0, "$(PORT)", 0)
-dbLoadRecords("NDStdArrays.template", "P=$(PREFIX),R=trace1:,PORT=Trace1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),TYPE=Float32,FTVL=FLOAT,NELEMENTS=$(XSIZE)")
+#NDStdArraysConfigure("Trace1", 3, 0, "$(PORT)", 0)
+#dbLoadRecords("NDStdArrays.template", "P=$(PREFIX),R=trace1:,PORT=Trace1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),TYPE=Float32,FTVL=FLOAT,NELEMENTS=$(XSIZE)")
 
 # Create a standard arrays plugin, set it to get data from first simDetector driver.
 #NDStdArraysConfigure("Image1", 3, 0, "$(PORT)", 0)
