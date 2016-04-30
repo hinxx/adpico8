@@ -220,11 +220,12 @@ asynStatus Pico8::writeInt32(asynUser *pasynUser, epicsInt32 value)
 
     /* Do param handling here */
     if (function == Pico8Range) {
-
-    } else if (function == Pico8Range) {
     } else if (function == Pico8FSamp) {
     } else if (function == Pico8BTrans) {
-    } else if (function == Pico8Trg) {
+    } else if (function == Pico8TrgMode) {
+    } else if (function == Pico8TrgCh) {
+    } else if (function == Pico8TrgLevel) {
+    } else if (function == Pico8TrgLength) {
     } else if (function == Pico8RingBuf) {
     } else if (function == Pico8GateMux) {
     } else if (function == Pico8ConvMux) {
@@ -296,32 +297,32 @@ asynStatus Pico8::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
   *            allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
   * \param[in] maxMemory The maximum amount of memory that the NDArrayPool for this driver is
   *            allowed to allocate. Set this to -1 to allow an unlimited amount of memory.
-  * \param[in] maxChannels The maximum number of channels that this driver will support
   * \param[in] devicePath Path to the /dev entry (usually /dev/amc_pico)
   * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   * \param[in] stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   */
-Pico8::Pico8(const char *portName,
-				int maxBuffers, size_t maxMemory,
-				int maxChannels, const char *devicePath,
-				int priority, int stackSize)
+Pico8::Pico8(const char *portName, int maxBuffers, size_t maxMemory,
+				const char *devicePath, int priority, int stackSize)
     /* Invoke the base class constructor */
-    : ADDriver(portName, maxChannels, NUM_PICO8_PARAMS, maxBuffers, maxMemory,
+    : ADDriver(portName, PICO8_NR_CHANNELS + 1, NUM_PICO8_PARAMS, maxBuffers, maxMemory,
                    asynInt32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask,
                    asynInt32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask,
 				   ASYN_MULTIDEVICE, 1, priority, stackSize)
 {
 	int status = asynSuccess;
     static const char *functionName = "Pico8";
-
+	
     createParam(Pico8RangeString,            asynParamInt32,       &Pico8Range);
     createParam(Pico8FSampString,            asynParamInt32,       &Pico8FSamp);
     createParam(Pico8BTransString,           asynParamInt32,       &Pico8BTrans);
-    createParam(Pico8TrgString,              asynParamInt32,       &Pico8Trg);
+    createParam(Pico8TrgModeString,          asynParamInt32,       &Pico8TrgMode);
+    createParam(Pico8TrgChString,            asynParamInt32,       &Pico8TrgCh);
+    createParam(Pico8TrgLevelString,         asynParamInt32,       &Pico8TrgLevel);
+    createParam(Pico8TrgLengthString,        asynParamInt32,       &Pico8TrgLength);
     createParam(Pico8RingBufString,          asynParamInt32,       &Pico8RingBuf);
     createParam(Pico8GateMuxString,          asynParamInt32,       &Pico8GateMux);
     createParam(Pico8ConvMuxString,          asynParamInt32,       &Pico8ConvMux);
-    createParam(Pico8DataString,             asynParamInt32Array,  &Pico8Data);
+    createParam(Pico8DataString,             asynParamFloat32Array,&Pico8Data);
 
 
 	// Use this to signal the data acquisition task that acquisition has started.
@@ -335,22 +336,22 @@ Pico8::Pico8(const char *portName,
 
 	status = setStringParam(ADManufacturer, mManufacturerName);
 	status |= setStringParam(ADModel, mDeviceName);
-	status |= setIntegerParam(ADSizeX, PICO8_DATA_SIZE);
+	status |= setIntegerParam(ADSizeX, PICO8_MAX_SAMPLES);
 	status |= setIntegerParam(ADSizeY, 1);
 	status |= setIntegerParam(ADBinX, 1);
 	status |= setIntegerParam(ADBinY, 1);
 	status |= setIntegerParam(ADMinX, 0);
 	status |= setIntegerParam(ADMinY, 0);
-	status |= setIntegerParam(ADMaxSizeX, PICO8_DATA_SIZE);
+	status |= setIntegerParam(ADMaxSizeX, PICO8_MAX_SAMPLES);
 	status |= setIntegerParam(ADMaxSizeY, 1);
 	status |= setIntegerParam(ADImageMode, ADImageSingle);
 	status |= setDoubleParam(ADAcquireTime, 1.0);
 	status |= setIntegerParam(ADNumImages, 1);
 	status |= setIntegerParam(ADNumExposures, 1);
-	status |= setIntegerParam(NDArraySizeX, PICO8_DATA_SIZE);
+	status |= setIntegerParam(NDArraySizeX, PICO8_MAX_SAMPLES);
 	status |= setIntegerParam(NDArraySizeY, 1);
 	status |= setIntegerParam(NDDataType, NDInt32);
-	status |= setIntegerParam(NDArraySize, PICO8_DATA_SIZE * 1 * sizeof(epicsInt32));
+	status |= setIntegerParam(NDArraySize, PICO8_MAX_SAMPLES * 1 * sizeof(epicsFloat32));
 	status |= setDoubleParam(ADShutterOpenDelay, 0.);
 	status |= setDoubleParam(ADShutterCloseDelay, 0.);
 
@@ -372,7 +373,7 @@ Pico8::Pico8(const char *portName,
 	mFinish = 0;
 
 	/* Create the thread that does data readout */
-	status = (epicsThreadCreate("TlDataTask",
+	status = (epicsThreadCreate("Pico8DataTask",
 			epicsThreadPriorityMedium, stackSize, (EPICSTHREADFUNC)dataTaskC, this) == NULL);
 	if (status) {
 		printf("%s:%s: epicsThreadCreate failure for data task\n", driverName, functionName);
@@ -385,11 +386,10 @@ Pico8::Pico8(const char *portName,
 /** Configuration command */
 extern "C" int Pico8Configure(const char *portName, int maxBuffers,
 								size_t maxMemory,
-								int maxChannels,
 								const char *devicePath,
 								int priority, int stackSize)
 {
-    new Pico8(portName, maxBuffers, maxMemory, maxChannels, devicePath, priority, stackSize);
+    new Pico8(portName, maxBuffers, maxMemory, devicePath, priority, stackSize);
     return(asynSuccess);
 }
 
@@ -397,27 +397,25 @@ extern "C" int Pico8Configure(const char *portName, int maxBuffers,
 static const iocshArg initArg0 = { "portName",iocshArgString};
 static const iocshArg initArg1 = { "maxBuffers",iocshArgInt};
 static const iocshArg initArg2 = { "maxMemory",iocshArgInt};
-static const iocshArg initArg3 = { "maxChannels",iocshArgInt};
-static const iocshArg initArg4 = { "devicePath", iocshArgString };
-static const iocshArg initArg5 = { "priority",iocshArgInt};
-static const iocshArg initArg6 = { "stackSize",iocshArgInt};
+static const iocshArg initArg3 = { "devicePath", iocshArgString };
+static const iocshArg initArg4 = { "priority",iocshArgInt};
+static const iocshArg initArg5 = { "stackSize",iocshArgInt};
 static const iocshArg * const initArgs[] = {&initArg0,
                                             &initArg1,
                                             &initArg2,
                                             &initArg3,
                                             &initArg4,
-                                            &initArg5,
-											&initArg6};
-static const iocshFuncDef initFuncDef = {"Pico8Configure",6,initArgs};
+											&initArg5};
+static const iocshFuncDef initFuncDef = {"Pico8Configure", 6, initArgs};
 static void initCallFunc(const iocshArgBuf *args)
 {
     Pico8Configure(args[0].sval, args[1].ival, args[2].ival,
-            args[3].ival, args[4].sval, args[5].ival, args[6].ival);
+            args[3].sval, args[4].ival, args[5].ival);
 }
 
 extern "C" void Pico8Register(void)
 {
-    iocshRegister(&initFuncDef,initCallFunc);
+    iocshRegister(&initFuncDef, initCallFunc);
 }
 
 extern "C" {
