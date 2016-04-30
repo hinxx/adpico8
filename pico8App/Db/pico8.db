@@ -38,8 +38,7 @@ record(longout, "$(P)$(R)FSamp")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_FSAMP")
-    # default to 100 kHz
-    field(VAL,  "1000000")
+#    field(VAL,  "1000000")
 }
 
 # Number of bytes that last read call successfully transferred.
@@ -79,7 +78,7 @@ record(mbbo, "$(P)$(R)TrgMode")
 	field(TWVL, "2")
 	field(THST, "Both Edges")
 	field(THVL, "3")
-    field(VAL,  "0")
+#    field(VAL,  "0")
 }
 
 # Internal trigger channel used for triggering.
@@ -126,13 +125,13 @@ record(mbbo, "$(P)$(R)TrgCh")
 	field(SXVL, "6")
 	field(SVST, "Ch 7")
 	field(SVVL, "7")
-    field(VAL,  "0")
+#    field(VAL,  "0")
 }
 
 # Internal trigger level in counts.
 record(ai, "$(P)$(R)TrgLevel_RBV")
 {
-    field(DTYP, "asynFloat32")
+    field(DTYP, "asynFloat64")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLEVEL")
     field(PREC, "1")
     field(SCAN, "I/O Intr")
@@ -140,10 +139,10 @@ record(ai, "$(P)$(R)TrgLevel_RBV")
 
 record(ao, "$(P)$(R)TrgLevel")
 {
-    field(DTYP, "asynFloat32")
+    field(DTYP, "asynFloat64")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLEVEL")
     field(PREC, "1")
-    field(VAL,  "100.0")
+#    field(VAL,  "100.0")
 }
 
 # Internal trigger length in samples.
@@ -158,7 +157,7 @@ record(longout, "$(P)$(R)TrgLength")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLENGTH")
-    field(VAL,  "10")
+#    field(VAL,  "10")
 }
 
 # Set the number of samples that are acquired before the trigger event
@@ -174,7 +173,7 @@ record(longout, "$(P)$(R)RingBuf")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RINGBUF")
-    field(VAL,  "10")
+#    field(VAL,  "10")
 }
 
 # Set the source of the gate signal. The gate signal enables the data
@@ -222,7 +221,7 @@ record(mbbo, "$(P)$(R)GateMux")
 	field(SXVL, "6")
 	field(SVST, "AMC port#20")
 	field(SVVL, "7")
-    field(VAL,  "0")
+#    field(VAL,  "0")
 }
 
 # Set the source of the start-of-conversion signal for the ADCs.
@@ -270,7 +269,7 @@ record(mbbo, "$(P)$(R)ConvMux")
 	field(SXVL, "6")
 	field(SVST, "AMC port#20")
 	field(SVVL, "7")
-    field(VAL,  "0")
+#    field(VAL,  "0")
 }
 
 
@@ -278,21 +277,21 @@ record(mbbo, "$(P)$(R)ConvMux")
 # These are the records that we modify from NDFile.template
 #
 
-record(mbbo, "$(P)$(R)FileFormat")
-{
-	field(ZRST, "RAW")
-	field(ZRVL, "0")
-	field(ONST, "BMP")
-	field(ONVL, "1")
-}
-
-record(mbbi, "$(P)$(R)FileFormat_RBV")
-{
-	field(ZRST, "RAW")
-	field(ZRVL, "0")
-	field(ONST, "BMP")
-	field(ONVL, "1")
-}
+#record(mbbo, "$(P)$(R)FileFormat")
+#{
+#	field(ZRST, "RAW")
+#	field(ZRVL, "0")
+#	field(ONST, "BMP")
+#	field(ONVL, "1")
+#}
+#
+#record(mbbi, "$(P)$(R)FileFormat_RBV")
+#{
+#	field(ZRST, "RAW")
+#	field(ZRVL, "0")
+#	field(ONST, "BMP")
+#	field(ONVL, "1")
+#}
 
 #
 # These are the records that we modify from ADBase.template
@@ -317,7 +316,7 @@ record(mbbi, "$(P)$(R)ImageMode_RBV")
 	field(ONVL, "2")
 	field(TWST, "")
 	field(TWVL, "")
-	field(SCAN, "I/O Intr")
+#	field(SCAN, "I/O Intr")
 }
 
 record(mbbo, "$(P)$(R)TriggerMode")
@@ -337,52 +336,51 @@ record(mbbi, "$(P)$(R)TriggerMode_RBV")
 	field(ONVL, "1")
 }
 
-record(mbbo, "$(P)$(R)DataType")
-{
-	field(PINI, "YES")
-	field(DTYP, "asynInt32")
-	field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DATA_TYPE")
-	field(ZRST, "Float64")
-	field(ZRVL, "7")
-	field(ONST, "")
-	field(ONVL, "")
-	field(TWST, "")
-	field(TWVL, "")
-	field(THST, "")
-	field(THVL, "")
-	field(FRST, "")
-	field(FRVL, "")
-	field(FVST, "")
-	field(FVVL, "")
-	field(SXST, "")
-	field(SXVL, "")
-	field(SVST, "")
-	field(SVVL, "")
-}
-
-record(mbbi, "$(P)$(R)DataType_RBV")
-{
-	field(ZRST, "Float64")
-	field(ZRVL, "7")
-	field(ONST, "")
-	field(ONVL, "")
-	field(TWST, "")
-	field(TWVL, "")
-	field(THST, "")
-	field(THVL, "")
-	field(FRST, "")
-	field(FRVL, "")
-	field(FVST, "")
-	field(FVVL, "")
-	field(SXST, "")
-	field(SXVL, "")
-	field(SVST, "")
-	field(SVVL, "")
-}
-
+#record(mbbo, "$(P)$(R)DataType")
+#{
+#	field(PINI, "YES")
+#	field(DTYP, "asynInt32")
+#	field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DATA_TYPE")
+#	field(ZRST, "Float64")
+#	field(ZRVL, "7")
+#	field(ONST, "")
+#	field(ONVL, "")
+#	field(TWST, "")
+#	field(TWVL, "")
+#	field(THST, "")
+#	field(THVL, "")
+#	field(FRST, "")
+#	field(FRVL, "")
+#	field(FVST, "")
+#	field(FVVL, "")
+#	field(SXST, "")
+#	field(SXVL, "")
+#	field(SVST, "")
+#	field(SVVL, "")
+#}
+#
+#record(mbbi, "$(P)$(R)DataType_RBV")
+#{
+#	field(ZRST, "Float64")
+#	field(ZRVL, "7")
+#	field(ONST, "")
+#	field(ONVL, "")
+#	field(TWST, "")
+#	field(TWVL, "")
+#	field(THST, "")
+#	field(THVL, "")
+#	field(FRST, "")
+#	field(FRVL, "")
+#	field(FVST, "")
+#	field(FVVL, "")
+#	field(SXST, "")
+#	field(SXVL, "")
+#	field(SVST, "")
+#	field(SVVL, "")
+#}
 
 #
-# Records in ADBase that do not apply to Thorlabs
+# Records in ADBase that do not apply to AMC Pico8
 #
 
 record(mbbo, "$(P)$(R)ColorMode")

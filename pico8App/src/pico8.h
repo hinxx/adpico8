@@ -35,9 +35,9 @@ class epicsShareClass Pico8 : public ADDriver {
 public:
 	Pico8(const char *portName, int maxBuffers, size_t maxMemory,
 				const char *devicePath, int priority, int stackSize);
-
+	~Pico8();
+	
     /* These methods override the virtual methods in the base class */
-    //void processCallbacks(NDArray *pArray);
     asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value,

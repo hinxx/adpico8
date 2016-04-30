@@ -25,12 +25,13 @@
 
 #include <iocsh.h>
 
+#include <amc_pico.h>
 #include "pico8.h"
 
 
 static const char *driverName = "Pico8";
 static void dataTaskC(void *drvPvt);
-
+static void exitHandler(void *drvPvt);
 
 static void dataTaskC(void *drvPvt) {
 	Pico8 *pPvt = (Pico8 *) drvPvt;
@@ -48,6 +49,8 @@ void Pico8::dataTask(void) {
 	epicsInt32 arrayCallbacks;
 	epicsInt32 sizeX, sizeY;
 	static const char *functionName = "dataTask";
+
+	sleep(5);
 
 	printf("%s:%s: Data thread started...\n", driverName, functionName);
 
@@ -126,48 +129,6 @@ void Pico8::dataTask(void) {
 	printf("Data thread is down!\n");
 }
 
-
-/** Callback function that is called by the NDArray driver with new NDArray data.
-  * \param[in] pArray  The NDArray from the callback.
-  */
-//void Pico8::processCallbacks(NDArray *pArray)
-//{
-//    /* It is called with the mutex already locked.
-//     * It unlocks it during long calculations when private structures don't
-//     * need to be protected.
-//     */
-//    //size_t sizeX=0;
-//    //int i;
-//    NDArrayInfo arrayInfo;
-//    static const char* functionName = "processCallbacks";
-//
-//    /* Call the base class method */
-//    NDPluginDriver::processCallbacks(pArray);
-//
-//    pArray->getInfo(&arrayInfo);
-//
-//    /* Do work here */
-//
-//    int arrayCallbacks = 0;
-//    getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
-//    if (arrayCallbacks == 1) {
-//        NDArray *pArrayOut = this->pNDArrayPool->copy(pArray, NULL, 1);
-//        if (NULL != pArrayOut) {
-//            this->getAttributes(pArrayOut->pAttributeList);
-//            this->unlock();
-//            doCallbacksGenericPointer(pArrayOut, NDArrayData, 0);
-//            this->lock();
-//        }
-//        else {
-//            asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-//                "%s::%s: Couldn't allocate output array. Further processing terminated.\n",
-//                driverName, functionName);
-//        }
-//    }
-//
-//    callParamCallbacks();
-//}
-
 asynStatus Pico8::readInt32(asynUser *pasynUser, epicsInt32 *value)
 {
     int function = pasynUser->reason;
@@ -179,7 +140,7 @@ asynStatus Pico8::readInt32(asynUser *pasynUser, epicsInt32 *value)
     if (status != asynSuccess) {
       return status;
     }
-
+#if 0
     if (function == Pico8Range) {
         status = (asynStatus) getIntegerParam(addr, function, value);
     } else if (function == Pico8FSamp) {
@@ -188,7 +149,14 @@ asynStatus Pico8::readInt32(asynUser *pasynUser, epicsInt32 *value)
 		/* If this parameter belongs to a base class call its method */
     	status = ADDriver::readInt32(pasynUser, value);
     }
-
+#endif
+	if (function < FIRST_PICO8_PARAM) {
+		/* If this parameter belongs to a base class call its method */
+    	status = ADDriver::readInt32(pasynUser, value);
+    } else {
+    	status = (asynStatus) getIntegerParam(addr, function, value);
+    }
+    
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
               "%s:%s: error, status=%d function=%d, value=%d\n",
@@ -289,6 +257,37 @@ asynStatus Pico8::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
 	return status;
 }
 
+/** Report status of the driver.
+ * Prints details about the detector in us if details>0.
+ * It then calls the ADDriver::report() method.
+ * \param[in] fp File pointed passed by caller where the output is written to.
+ * \param[in] details Controls the level of detail in the report. */
+void Pico8::report(FILE *fp, int details) {
+	static const char *functionName = "report";
+
+	fprintf(fp, "CAENELS AMC Pico8 port=%s\n", this->portName);
+	if (details > 0) {
+/*		try {
+
+			checkStatus(tlccs_identificationQuery(mInstr, mManufacturerName,
+							mDeviceName, mSerialNumber, mFirmwareRevision,
+							mInstrumentDriverRevision));
+			fprintf(fp, "  Manufacturer: %s\n", mManufacturerName);
+			fprintf(fp, "  Model: %s\n", mDeviceName);
+			fprintf(fp, "  Serial number: %s\n", mSerialNumber);
+			fprintf(fp, "  Driver version: %s\n", mInstrumentDriverRevision);
+			fprintf(fp, "  Firmware version: %s\n", mFirmwareRevision);
+
+		} catch (const std::string &e) {
+			asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s:%s: %s\n",
+					driverName, functionName, e.c_str());
+		}
+*/
+	}
+	// Call the base class method
+	ADDriver::report(fp, details);
+}
+
 /** Constructor for Pico8; most parameters are simply passed to ADDriver::ADDriver.
   * After calling the base class constructor this method sets reasonable default values for all of the
   * parameters.
@@ -305,19 +304,22 @@ Pico8::Pico8(const char *portName, int maxBuffers, size_t maxMemory,
 				const char *devicePath, int priority, int stackSize)
     /* Invoke the base class constructor */
     : ADDriver(portName, PICO8_NR_CHANNELS + 1, NUM_PICO8_PARAMS, maxBuffers, maxMemory,
-                   asynInt32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask,
-                   asynInt32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask,
+                   asynFloat32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask,
+                   asynFloat32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask,
 				   ASYN_MULTIDEVICE, 1, priority, stackSize)
 {
 	int status = asynSuccess;
     static const char *functionName = "Pico8";
 	
+	/* Create an EPICS exit handler */
+	epicsAtExit(exitHandler, this);
+
     createParam(Pico8RangeString,            asynParamInt32,       &Pico8Range);
     createParam(Pico8FSampString,            asynParamInt32,       &Pico8FSamp);
     createParam(Pico8BTransString,           asynParamInt32,       &Pico8BTrans);
     createParam(Pico8TrgModeString,          asynParamInt32,       &Pico8TrgMode);
     createParam(Pico8TrgChString,            asynParamInt32,       &Pico8TrgCh);
-    createParam(Pico8TrgLevelString,         asynParamInt32,       &Pico8TrgLevel);
+    createParam(Pico8TrgLevelString,         asynParamFloat64,     &Pico8TrgLevel);
     createParam(Pico8TrgLengthString,        asynParamInt32,       &Pico8TrgLength);
     createParam(Pico8RingBufString,          asynParamInt32,       &Pico8RingBuf);
     createParam(Pico8GateMuxString,          asynParamInt32,       &Pico8GateMux);
@@ -350,11 +352,22 @@ Pico8::Pico8(const char *portName, int maxBuffers, size_t maxMemory,
 	status |= setIntegerParam(ADNumExposures, 1);
 	status |= setIntegerParam(NDArraySizeX, PICO8_MAX_SAMPLES);
 	status |= setIntegerParam(NDArraySizeY, 1);
-	status |= setIntegerParam(NDDataType, NDInt32);
+	status |= setIntegerParam(NDDataType, NDFloat32);
 	status |= setIntegerParam(NDArraySize, PICO8_MAX_SAMPLES * 1 * sizeof(epicsFloat32));
 	status |= setDoubleParam(ADShutterOpenDelay, 0.);
 	status |= setDoubleParam(ADShutterCloseDelay, 0.);
 
+	status |= setIntegerParam(Pico8Range, 0);
+	status |= setIntegerParam(Pico8FSamp, 100000);
+	status |= setIntegerParam(Pico8BTrans, 0);
+	status |= setIntegerParam(Pico8TrgMode, 0);
+	status |= setIntegerParam(Pico8TrgCh, 0);
+	status |= setDoubleParam(Pico8TrgLevel, 100.0);
+	status |= setIntegerParam(Pico8TrgLength, 10);
+	status |= setIntegerParam(Pico8FSamp, 100000);
+	status |= setIntegerParam(Pico8RingBuf, 0);
+	status |= setIntegerParam(Pico8GateMux, 0);
+	status |= setIntegerParam(Pico8ConvMux, 0);
 
 	callParamCallbacks();
 
@@ -381,6 +394,29 @@ Pico8::Pico8(const char *portName, int maxBuffers, size_t maxMemory,
 	}
 
 	printf("Pico8 initialized OK!\n");
+}
+
+Pico8::~Pico8() {
+	printf("Shutdown and freeing up memory...\n");
+
+	this->lock();
+
+	/* make sure threads are cleanly stopped */
+	printf("Waiting for threads...\n");
+	this->mFinish = 1;
+	epicsEventSignal(mDataEvent);
+	sleep(1);
+	printf("Threads are down!\n");
+
+	this->unlock();
+}
+
+/**
+ * Exit handler, delete the Pico8 object.
+ */
+static void exitHandler(void *drvPvt) {
+	Pico8 *pPico8 = (Pico8 *) drvPvt;
+	delete pPico8;
 }
 
 /** Configuration command */

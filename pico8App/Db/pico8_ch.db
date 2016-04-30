@@ -4,26 +4,26 @@
 # If the bit is set, the range is set to narrower range
 # (e.g. 1uA on standard AMC-Pico-8).
 # Can be overriden by all channel range value in pico8.db.
-record(mbbi, "$(P)$(R)Range_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RANGE")
-    field(SCAN, "I/O Intr")
-	field(ZRST, "1 mA")
-	field(ZRVL, "0")
-	field(ONST, "1 uA")
-	field(ONVL, "1")
-}
-
-record(mbbo, "$(P)$(R)Range")
-{
-    field(DTYP, "asynInt32")
-    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RANGE")
-	field(ZRST, "1 mA")
-	field(ZRVL, "0")
-	field(ONST, "1 uA")
-	field(ONVL, "1")
-}
+#record(mbbi, "$(P)$(R)Range_RBV")
+#{
+#    field(DTYP, "asynInt32")
+#    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RANGE")
+#    field(SCAN, "I/O Intr")
+#	field(ZRST, "1 mA")
+#	field(ZRVL, "0")
+#	field(ONST, "1 uA")
+#	field(ONVL, "1")
+#}
+#
+#record(mbbo, "$(P)$(R)Range")
+#{
+#    field(DTYP, "asynInt32")
+#    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RANGE")
+#	field(ZRST, "1 mA")
+#	field(ZRVL, "0")
+#	field(ONST, "1 uA")
+#	field(ONVL, "1")
+#}
 
 # Data for each channel
 record(waveform, "$(P)$(R)Data_RBV")
@@ -31,8 +31,8 @@ record(waveform, "$(P)$(R)Data_RBV")
 	field(DTYP, "asynFloat32ArrayIn")
 	field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_DATA")
 	field(FTVL, "FLOAT")
-	#field(NELM, "$(NELEMENTS)")
-	field(NELM, "1048576")
+	field(NELM, "$(NELEMENTS)")
+	#field(NELM, "1048576")
 	#field(SCAN, "Passive")
 	field(PREC, "3")
 	#field(PINI, "YES")
