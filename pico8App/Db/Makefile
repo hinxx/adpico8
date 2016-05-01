@@ -10,8 +10,8 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------------------
 # Create and install (or just install) into <top>/db
 # databases, templates, substitutions like this
-DB += pico8.db
-DB += pico8_ch.db
+DB += pico8.template
+DB += pico8N.template
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add

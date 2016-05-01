@@ -1,0 +1,336 @@
+#=================================================================#
+# Template file: pico8.template
+# Database for the records specific to the AMC pico8 detector driver
+# Hinko Kocevar
+# May 1, 2016
+
+include "NDArrayBase.template"
+
+record(busy, "$(P)$(R)Acquire")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_ACQUIRE")
+   field(ZNAM, "Done")
+   field(ONAM, "Acquire")
+   info(autosaveFields, "VAL")
+}
+
+record(bi, "$(P)$(R)Acquire_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_ACQUIRE")
+   field(ZNAM, "Done")
+   field(ONAM, "Acquire")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)NumPoints")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_NUMPOINTS")
+   info(autosaveFields, "VAL")
+}
+
+record(longin, "$(P)$(R)NumPoints_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_NUMPOINTS")
+   field(SCAN, "I/O Intr")
+}
+
+# Range control for all channels. Will override individual channel range values.
+# If the bit is cleared, the range is set to wider range
+# (e.g. 1mA on standard AMC-Pico-8).
+# If the bit is set, the range is set to narrower range
+# (e.g. 1uA on standard AMC-Pico-8).
+# See pico8_ch.db for individual channel range control.
+record(mbbi, "$(P)$(R)Range_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RANGE")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "1 mA")
+    field(ZRVL, "0")
+    field(ONST, "1 uA")
+    field(ONVL, "1")
+}
+
+record(mbbo, "$(P)$(R)Range")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RANGE")
+    field(ZRST, "1 mA")
+    field(ZRVL, "0")
+    field(ONST, "1 uA")
+    field(ONVL, "1")
+}
+
+# Sampling frequency of the internal convert signal generator.
+# The maximum sampling frequency is 1 MHz and the minimum is 75 kHz.
+record(longin, "$(P)$(R)FSamp_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_FSAMP")
+    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)FSamp")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_FSAMP")
+#    field(VAL,  "1000000")
+}
+
+# Number of bytes that last read call successfully transferred.
+record(longin, "$(P)$(R)BTrans_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_BTRANS")
+    field(SCAN, "I/O Intr")
+}
+
+# Internal trigger mode.
+# Used if GateMux is set to 'Internal trigger'.
+record(mbbi, "$(P)$(R)TrgMode_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGMODE")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Disabled")
+    field(ZRVL, "0")
+    field(ONST, "Positive Edge")
+    field(ONVL, "1")
+    field(TWST, "Negative Edge")
+    field(TWVL, "2")
+    field(THST, "Both Edges")
+    field(THVL, "3")
+}
+
+record(mbbo, "$(P)$(R)TrgMode")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGMODE")
+    field(ZRST, "Disabled")
+    field(ZRVL, "0")
+    field(ONST, "Positive Edge")
+    field(ONVL, "1")
+    field(TWST, "Negative Edge")
+    field(TWVL, "2")
+    field(THST, "Both Edges")
+    field(THVL, "3")
+#    field(VAL,  "0")
+}
+
+# Internal trigger channel used for triggering.
+record(mbbi, "$(P)$(R)TrgCh_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGCH")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Ch 0")
+    field(ZRVL, "0")
+    field(ONST, "Ch 1")
+    field(ONVL, "1")
+    field(TWST, "Ch 2")
+    field(TWVL, "2")
+    field(THST, "Ch 3")
+    field(THVL, "3")
+    field(FRST, "Ch 4")
+    field(FRVL, "4")
+    field(FVST, "Ch 5")
+    field(FVVL, "5")
+    field(SXST, "Ch 6")
+    field(SXVL, "6")
+    field(SVST, "Ch 7")
+    field(SVVL, "7")
+}
+
+record(mbbo, "$(P)$(R)TrgCh")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGCH")
+    field(ZRST, "Ch 0")
+    field(ZRVL, "0")
+    field(ONST, "Ch 1")
+    field(ONVL, "1")
+    field(TWST, "Ch 2")
+    field(TWVL, "2")
+    field(THST, "Ch 3")
+    field(THVL, "3")
+    field(FRST, "Ch 4")
+    field(FRVL, "4")
+    field(FVST, "Ch 5")
+    field(FVVL, "5")
+    field(SXST, "Ch 6")
+    field(SXVL, "6")
+    field(SVST, "Ch 7")
+    field(SVVL, "7")
+#    field(VAL,  "0")
+}
+
+# Internal trigger level in counts.
+record(ai, "$(P)$(R)TrgLevel_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLEVEL")
+    field(PREC, "1")
+    field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)$(R)TrgLevel")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLEVEL")
+    field(PREC, "1")
+#    field(VAL,  "100.0")
+}
+
+# Internal trigger length in samples.
+record(longin, "$(P)$(R)TrgLength_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLENGTH")
+    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)TrgLength")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLENGTH")
+#    field(VAL,  "10")
+}
+
+# Set the number of samples that are acquired before the trigger event
+# and stored in the ring buffer. The max size of the ring buffer is 1023.
+record(longin, "$(P)$(R)RingBuf_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RINGBUF")
+    field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)$(R)RingBuf")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RINGBUF")
+#    field(VAL,  "10")
+}
+
+# Set the source of the gate signal. The gate signal enables the data
+# acquisition.
+record(mbbi, "$(P)$(R)GateMux_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_GATEMUX")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Fixed at 1")
+    field(ZRVL, "0")
+    field(ONST, "Fixed at 0")
+    field(ONVL, "1")
+    field(TWST, "Internal trigger")
+    field(TWVL, "2")
+    field(THST, "Reserved")
+    field(THVL, "3")
+    field(FRST, "AMC port#17")
+    field(FRVL, "4")
+    field(FVST, "AMC port#18")
+    field(FVVL, "5")
+    field(SXST, "AMC port#19")
+    field(SXVL, "6")
+    field(SVST, "AMC port#20")
+    field(SVVL, "7")
+}
+
+record(mbbo, "$(P)$(R)GateMux")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_GATEMUX")
+    field(ZRST, "Fixed at 1")
+    field(ZRVL, "0")
+    field(ONST, "Fixed at 0")
+    field(ONVL, "1")
+    field(TWST, "Internal trigger")
+    field(TWVL, "2")
+    field(THST, "Reserved")
+    field(THVL, "3")
+    field(FRST, "AMC port#17")
+    field(FRVL, "4")
+    field(FVST, "AMC port#18")
+    field(FVVL, "5")
+    field(SXST, "AMC port#19")
+    field(SXVL, "6")
+    field(SVST, "AMC port#20")
+    field(SVVL, "7")
+#    field(VAL,  "0")
+}
+
+# Set the source of the start-of-conversion signal for the ADCs.
+# If set to 'Internal oscilator' then FSamp is used.
+record(mbbi, "$(P)$(R)ConvMux_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_CONVMUX")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Internal oscillator")
+    field(ZRVL, "0")
+    field(ONST, "AMC TCLKA")
+    field(ONVL, "1")
+    field(TWST, "AMC TCLKB")
+    field(TWVL, "2")
+    field(THST, "Reserved")
+    field(THVL, "3")
+    field(FRST, "AMC port#17")
+    field(FRVL, "4")
+    field(FVST, "AMC port#18")
+    field(FVVL, "5")
+    field(SXST, "AMC port#19")
+    field(SXVL, "6")
+    field(SVST, "AMC port#20")
+    field(SVVL, "7")
+}
+
+record(mbbo, "$(P)$(R)ConvMux")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_CONVMUX")
+    field(ZRST, "Internal oscillator")
+    field(ZRVL, "0")
+    field(ONST, "AMC TCLKA")
+    field(ONVL, "1")
+    field(TWST, "AMC TCLKB")
+    field(TWVL, "2")
+    field(THST, "Reserved")
+    field(THVL, "3")
+    field(FRST, "AMC port#17")
+    field(FRVL, "4")
+    field(FVST, "AMC port#18")
+    field(FVVL, "5")
+    field(SXST, "AMC port#19")
+    field(SXVL, "6")
+    field(SVST, "AMC port#20")
+    field(SVVL, "7")
+#    field(VAL,  "0")
+}
+
+
+#
+# These are the records that we modify from NDFile.template
+#
+
+#record(mbbo, "$(P)$(R)FileFormat")
+#{
+#   field(ZRST, "RAW")
+#   field(ZRVL, "0")
+#   field(ONST, "BMP")
+#   field(ONVL, "1")
+#}
+#
+#record(mbbi, "$(P)$(R)FileFormat_RBV")
+#{
+#   field(ZRST, "RAW")
+#   field(ZRVL, "0")
+#   field(ONST, "BMP")
+#   field(ONVL, "1")
+#}

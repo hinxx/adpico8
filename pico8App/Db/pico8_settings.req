@@ -1,0 +1,3 @@
+$(P)$(R)NumPoints
+
+file "NDArrayBase_settings.req", P=$(P), R=$(R)

@@ -9,16 +9,17 @@
 #define _PICO8_H_
 
 #include <epicsTypes.h>
-
-#include <ADDriver.h>
+#include <epicsEvent.h>
+#include <epicsTime.h>
+#include <asynNDArrayDriver.h>
 
 /* Number of channels is fixed to 8 */
 #define PICO8_NR_CHANNELS			8
 /* For strings */
 #define PICO8_BUFFER_SIZE			256
-/* 1M samples max */
-#define PICO8_MAX_SAMPLES			1024*1024
 
+#define Pico8AcquireString            "PICO8_ACQUIRE"          /* (asynParamInt32, r/w) acquire control */
+#define Pico8NumPointsString          "PICO8_NUMPOINTS"        /* (asynParamInt32, r/w) number of points */
 #define Pico8RangeString              "PICO8_RANGE"            /* (asynParamInt32, r/w) range */
 #define Pico8FSampString              "PICO8_FSAMP"            /* (asynParamInt32, r/w) sampling frequency */
 #define Pico8BTransString             "PICO8_BTRANS"           /* (asynParamInt32, r/o) no. of transferred bytes */
@@ -31,37 +32,43 @@
 #define Pico8ConvMuxString            "PICO8_CONVMUX"          /* (asynParamInt32, w/o) start of conversion source */
 #define Pico8DataString               "PICO8_DATA"             /* (asynParamInt32Array, r/o) data */
 
-class epicsShareClass Pico8 : public ADDriver {
+/** AMC Pico8 driver; does 1-D waveforms on 8 channels.
+  * Inherits from asynNDArrayDriver */
+class epicsShareClass Pico8 : public asynNDArrayDriver {
 public:
-	Pico8(const char *portName, int maxBuffers, size_t maxMemory,
-				const char *devicePath, int priority, int stackSize);
+	Pico8(const char *portName, const char *devicePath, int numPoints,
+			NDDataType_t dataType, int maxBuffers, size_t maxMemory,
+			int priority, int stackSize);
 	~Pico8();
 	
     /* These methods override the virtual methods in the base class */
-    asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
-    asynStatus readFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
-                                        size_t nElements, size_t *nIn);
     virtual void report(FILE *fp, int details);
 
     // Should be private, but are called from C so must be public
     void dataTask(void);
 
 private:
+    /* These are the methods that are new to this class */
+    template <typename epicsType> int acquireArraysT();
+    int acquireArrays();
+    void setAcquire(int value);
 	int openDevice();
 	void closeDevice();
-	int readDevice(uint32_t samp, uint32_t *count);
+	int readDevice(void *buf, int samp, int *count);
 	int setFSamp(uint32_t val);
 	int setRange(uint8_t val);
-	int getBTrans(uint32_t *val);
+	int getBTrans(int *val);
 	int setGateMux(uint32_t val);
 	int setConvMux(uint32_t val);
 	int setRingBuf(uint32_t val);
 	int setTrigger(float level, int32_t length, int32_t ch, int32_t mode);
 
 protected:
+	int Pico8Acquire;
+#define FIRST_PICO8_PARAM Pico8Acquire
+    int Pico8NumPoints;
     int Pico8Range;
-#define FIRST_PICO8_PARAM Pico8Range
     int Pico8FSamp;
     int Pico8BTrans;
     int Pico8TrgMode;
@@ -79,15 +86,16 @@ protected:
 private:
 	int mHandle;
 	void *mDataBuf;
-    epicsEventId mDataEvent;
-    unsigned int mAcquiringData;
-    unsigned int mFinish;
     char mDevicePath[PICO8_BUFFER_SIZE];
     char mManufacturerName[PICO8_BUFFER_SIZE];
     char mDeviceName[PICO8_BUFFER_SIZE];
     char mSerialNumber[PICO8_BUFFER_SIZE];
     char mFirmwareRevision[PICO8_BUFFER_SIZE];
 
+    epicsEventId startEventId_;
+    epicsEventId stopEventId_;
+    int uniqueId_;
+    int acquiring_;
 };
 #define NUM_PICO8_PARAMS ((int)(&LAST_PICO8_PARAM - &FIRST_PICO8_PARAM + 1))
 

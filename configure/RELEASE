@@ -39,8 +39,8 @@ SUPPORT=${MY_EPICS_SUPPORT}
 # If using the sequencer, point SNCSEQ at its top directory:
 #SNCSEQ=$(EPICS_BASE)/../modules/soft/seq
 
-AREA_DETECTOR=$(SUPPORT)/m-epics-adcore
-ADCORE=$(SUPPORT)/m-epics-adcore
+AREA_DETECTOR=$(SUPPORT)/areaDetector-2.5
+ADCORE=$(AREA_DETECTOR)/ADCore
 ASYN=$(SUPPORT)/m-epics-asyn
 
 AMCPICODRV=$(SUPPORT)/amcpicodrv
