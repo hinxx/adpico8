@@ -171,11 +171,13 @@ int Pico8::setTrigger(float level, int32_t length, int32_t ch, int32_t mode) {
 void Pico8::setAcquire(int value) {
     if (value && !acquiring_) {
         /* Send an event to wake up the simulation task */
+        //printf("%s Waking up!\n", __func__);
         epicsEventSignal(this->startEventId_);
     }
     if (!value && acquiring_) {
         /* This was a command to stop acquisition */
         /* Send the stop event */
+        //printf("%s Stopping!\n", __func__);
         epicsEventSignal(this->stopEventId_);
     }
 }
@@ -212,6 +214,8 @@ template <typename epicsType> int Pico8::acquireArraysT()
     if (ret == -1) {
     	return ret;
     }
+
+    setIntegerParam(Pico8BTrans, count / 32);
 
     return 0;
 }
@@ -257,6 +261,7 @@ void Pico8::dataTask(void) {
     epicsTimeStamp startTime;
     int arrayCounter;
     int i;
+    int ret;
 	static const char *functionName = "dataTask";
 
 	sleep(1);
@@ -271,8 +276,6 @@ void Pico8::dataTask(void) {
 
 	printf("%s:%s: Data thread started...\n", driverName, functionName);
 
-
-    this->lock();
     /* Loop forever */
     while (1) {
         /* Has acquisition been stopped? */
@@ -280,6 +283,7 @@ void Pico8::dataTask(void) {
         if (status == epicsEventWaitOK) {
             acquiring_ = 0;
         }
+        //printf("%s: 1 Acquring = %d..\n", __func__, acquiring_);
 
         /* If we are not acquiring then wait for a semaphore that is given when acquisition is started */
         if (!acquiring_) {
@@ -291,9 +295,13 @@ void Pico8::dataTask(void) {
             this->lock();
             acquiring_ = 1;
         }
+        //printf("%s: 2 Acquring = %d..\n", __func__, acquiring_);
 
         /* Get the data */
-        acquireArrays();
+        ret = acquireArrays();
+        if (ret == -1) {
+            printf("%s: Acquisition failed!!\n", __func__);
+        }
 
         pImage = this->pArrays[0];
 
@@ -344,6 +352,8 @@ asynStatus Pico8::writeInt32(asynUser *pasynUser, epicsInt32 value)
     /* Set the parameter and readback in the parameter library.  This may be overwritten when we read back the
      * status at the end, but that's OK */
     status = setIntegerParam(addr, function, value);
+
+    //printf("%s: ENTER %d (%d) = %d\n", __func__, function, addr, value);
 
     /* Do param handling here */
     if (function == Pico8Acquire) {
@@ -451,6 +461,7 @@ Pico8::Pico8(const char *portName, const char *devicePath, int numPoints,
     static const char *functionName = "Pico8";
 	
 	mHandle = -1;
+	memcpy(mDevicePath, devicePath, strlen(devicePath));
 
 	/* Create the epicsEvents for signaling to the simulate task when acquisition starts and stops */
     this->startEventId_ = epicsEventCreate(epicsEventEmpty);
