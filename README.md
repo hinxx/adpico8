@@ -1,7 +1,6 @@
 # CAENELS AMC PICO8 EPICS support module
 
-_Author: Hinko Kocevar <hinko.kocevar@esss.se>_
-_Date: May 3 2016_
+_Author: Hinko Kocevar <hinko.kocevar@esss.se>, May 3 2016_
 
 
 This modules provides support for CAENELS AMC PICO8 picoamper meter consisting
