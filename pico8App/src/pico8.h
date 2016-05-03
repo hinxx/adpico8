@@ -19,7 +19,8 @@
 #define PICO8_BUFFER_SIZE			256
 
 #define Pico8AcquireString            "PICO8_ACQUIRE"          /* (asynParamInt32, r/w) acquire control */
-#define Pico8NumPointsString          "PICO8_NUMPOINTS"        /* (asynParamInt32, r/w) number of points */
+#define Pico8NumTimePointsString      "PICO8_NUM_TIME_POINTS"  /* (asynParamInt32, r/w) number of time points */
+#define Pico8ElapsedTimeString        "PICO8_ELAPSED_TIME"     /* (asynFloat64, r/o) time spent acquiring */
 #define Pico8RangeString              "PICO8_RANGE"            /* (asynParamInt32, r/w) range */
 #define Pico8FSampString              "PICO8_FSAMP"            /* (asynParamInt32, r/w) sampling frequency */
 #define Pico8BTransString             "PICO8_BTRANS"           /* (asynParamInt32, r/o) no. of transferred bytes */
@@ -67,7 +68,8 @@ private:
 protected:
 	int Pico8Acquire;
 #define FIRST_PICO8_PARAM Pico8Acquire
-    int Pico8NumPoints;
+    int Pico8NumTimePoints;
+    int Pico8ElapsedTime;
     int Pico8Range;
     int Pico8FSamp;
     int Pico8BTrans;

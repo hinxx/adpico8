@@ -1,6 +1,6 @@
 #=================================================================#
 # Template file: pico8.template
-# Database for the records specific to the AMC pico8 detector driver
+# Database for the records specific to the AMC Pico8 detector driver
 # Hinko Kocevar
 # May 1, 2016
 
@@ -25,18 +25,26 @@ record(bi, "$(P)$(R)Acquire_RBV")
    field(SCAN, "I/O Intr")
 }
 
-record(longout, "$(P)$(R)NumPoints")
+record(longout, "$(P)$(R)NumTimePoints")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_NUMPOINTS")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_NUM_TIME_POINTS")
    info(autosaveFields, "VAL")
 }
 
-record(longin, "$(P)$(R)NumPoints_RBV")
+record(longin, "$(P)$(R)NumTimePoints_RBV")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_NUMPOINTS")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_NUM_TIME_POINTS")
+   field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)ElapsedTime")
+{
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_ELAPSED_TIME")
+   field(PREC, "3")
    field(SCAN, "I/O Intr")
 }
 
@@ -65,6 +73,7 @@ record(mbbo, "$(P)$(R)Range")
     field(ZRVL, "0")
     field(ONST, "1 uA")
     field(ONVL, "1")
+    info(autosaveFields, "VAL")
 }
 
 # Sampling frequency of the internal convert signal generator.
@@ -80,7 +89,7 @@ record(longout, "$(P)$(R)FSamp")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_FSAMP")
-#    field(VAL,  "1000000")
+    info(autosaveFields, "VAL")
 }
 
 # Number of bytes that last read call successfully transferred.
@@ -120,7 +129,7 @@ record(mbbo, "$(P)$(R)TrgMode")
     field(TWVL, "2")
     field(THST, "Both Edges")
     field(THVL, "3")
-#    field(VAL,  "0")
+    info(autosaveFields, "VAL")
 }
 
 # Internal trigger channel used for triggering.
@@ -129,21 +138,21 @@ record(mbbi, "$(P)$(R)TrgCh_RBV")
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGCH")
     field(SCAN, "I/O Intr")
-    field(ZRST, "Ch 0")
+    field(ZRST, "Ch 1")
     field(ZRVL, "0")
-    field(ONST, "Ch 1")
+    field(ONST, "Ch 2")
     field(ONVL, "1")
-    field(TWST, "Ch 2")
+    field(TWST, "Ch 3")
     field(TWVL, "2")
-    field(THST, "Ch 3")
+    field(THST, "Ch 4")
     field(THVL, "3")
-    field(FRST, "Ch 4")
+    field(FRST, "Ch 5")
     field(FRVL, "4")
-    field(FVST, "Ch 5")
+    field(FVST, "Ch 6")
     field(FVVL, "5")
-    field(SXST, "Ch 6")
+    field(SXST, "Ch 7")
     field(SXVL, "6")
-    field(SVST, "Ch 7")
+    field(SVST, "Ch 8")
     field(SVVL, "7")
 }
 
@@ -151,23 +160,23 @@ record(mbbo, "$(P)$(R)TrgCh")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGCH")
-    field(ZRST, "Ch 0")
+    field(ZRST, "Ch 1")
     field(ZRVL, "0")
-    field(ONST, "Ch 1")
+    field(ONST, "Ch 2")
     field(ONVL, "1")
-    field(TWST, "Ch 2")
+    field(TWST, "Ch 3")
     field(TWVL, "2")
-    field(THST, "Ch 3")
+    field(THST, "Ch 4")
     field(THVL, "3")
-    field(FRST, "Ch 4")
+    field(FRST, "Ch 5")
     field(FRVL, "4")
-    field(FVST, "Ch 5")
+    field(FVST, "Ch 6")
     field(FVVL, "5")
-    field(SXST, "Ch 6")
+    field(SXST, "Ch 7")
     field(SXVL, "6")
-    field(SVST, "Ch 7")
+    field(SVST, "Ch 8")
     field(SVVL, "7")
-#    field(VAL,  "0")
+    info(autosaveFields, "VAL")
 }
 
 # Internal trigger level in counts.
@@ -184,7 +193,7 @@ record(ao, "$(P)$(R)TrgLevel")
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLEVEL")
     field(PREC, "1")
-#    field(VAL,  "100.0")
+    info(autosaveFields, "VAL")
 }
 
 # Internal trigger length in samples.
@@ -199,7 +208,7 @@ record(longout, "$(P)$(R)TrgLength")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_TRGLENGTH")
-#    field(VAL,  "10")
+    info(autosaveFields, "VAL")
 }
 
 # Set the number of samples that are acquired before the trigger event
@@ -215,7 +224,7 @@ record(longout, "$(P)$(R)RingBuf")
 {
     field(DTYP, "asynInt32")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))PICO8_RINGBUF")
-#    field(VAL,  "10")
+    info(autosaveFields, "VAL")
 }
 
 # Set the source of the gate signal. The gate signal enables the data
@@ -263,7 +272,7 @@ record(mbbo, "$(P)$(R)GateMux")
     field(SXVL, "6")
     field(SVST, "AMC port#20")
     field(SVVL, "7")
-#    field(VAL,  "0")
+    info(autosaveFields, "VAL")
 }
 
 # Set the source of the start-of-conversion signal for the ADCs.
@@ -311,7 +320,7 @@ record(mbbo, "$(P)$(R)ConvMux")
     field(SXVL, "6")
     field(SVST, "AMC port#20")
     field(SVVL, "7")
-#    field(VAL,  "0")
+    info(autosaveFields, "VAL")
 }
 
 

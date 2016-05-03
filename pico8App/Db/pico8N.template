@@ -1,11 +1,12 @@
 #=================================================================#
 # Template file: pico8N.template
-# Database for the records specific to the AMC pico8 detector driver
+# Database for the records specific to the AMC Pico8 detector driver
 # Hinko Kocevar
 # May 1, 2016
 
 record(stringout, "$(P)$(R)Name")
 {
+   field(PINI, "YES")
    field(VAL,  "$(NAME)")
    info(autosaveFields, "VAL")
 }

@@ -33,7 +33,8 @@ epicsEnvSet("T6", "Ch6")
 epicsEnvSet("T7", "Ch7")
 epicsEnvSet("T8", "Ch8")
 
-asynSetMinTimerPeriod(0.001)
+# Not for Linux?
+#asynSetMinTimerPeriod(0.001)
 
 # The EPICS environment variable EPICS_CA_MAX_ARRAY_BYTES needs to be set to a value at least as large
 # as the largest image that the standard arrays plugin will send.
@@ -52,7 +53,16 @@ epicsEnvSet("EPICS_CA_MAX_ARRAY_BYTES", "10000000")
 #             int numPoints, int dataType,
 #             int maxBuffers, int maxMemory,
 #             int priority, int stackSize)
-Pico8Configure("$(PORT)", "/dev/amc_pico", $(YSIZE), 7, 0, 0, 0, 0)
+#dataType Initial data type of the detector data. These are the enum values for NDDataType_t, i.e.
+#    0=NDInt8
+#    1=NDUInt8
+#    2=NDInt16
+#    3=NDUInt16
+#    4=NDInt32
+#    5=NDUInt32
+#    6=NDFloat32
+#    7=NDFloat64
+Pico8Configure("$(PORT)", "/dev/amc_pico", $(YSIZE), 6, 0, 0, 0, 0)
 dbLoadRecords("$(PICO8)/db/pico8.template",  "P=$(PREFIX),R=det1:,  PORT=$(PORT),ADDR=0,TIMEOUT=1")
 dbLoadRecords("$(PICO8)/db/pico8N.template", "P=$(PREFIX),R=det1:1:,PORT=$(PORT),ADDR=0,TIMEOUT=1,NAME=$(T1)")
 dbLoadRecords("$(PICO8)/db/pico8N.template", "P=$(PREFIX),R=det1:2:,PORT=$(PORT),ADDR=1,TIMEOUT=1,NAME=$(T2)")
@@ -63,10 +73,10 @@ dbLoadRecords("$(PICO8)/db/pico8N.template", "P=$(PREFIX),R=det1:6:,PORT=$(PORT)
 dbLoadRecords("$(PICO8)/db/pico8N.template", "P=$(PREFIX),R=det1:7:,PORT=$(PORT),ADDR=6,TIMEOUT=1,NAME=$(T7)")
 dbLoadRecords("$(PICO8)/db/pico8N.template", "P=$(PREFIX),R=det1:8:,PORT=$(PORT),ADDR=7,TIMEOUT=1,NAME=$(T8)")
 
-# Load an NDFile database.  This is not supported for the simDetector which does not write files.
-#dbLoadRecords("NDFile.template","P=$(PREFIX),R=acq:,PORT=PICO8,ADDR=0,TIMEOUT=1")
+# Load an NDFile database.
+dbLoadRecords("NDFile.template","P=$(PREFIX),R=acq:,PORT=PICO8,ADDR=0,TIMEOUT=1")
 
-# Create a standard arrays plugin, set it to get data from ADCSDetector driver.
+# Create a standard arrays plugin, set it to get data from Pico8 driver.
 NDStdArraysConfigure("Image1", 3, 0, "$(PORT)", 0)
 # This creates a waveform large enough for 100000x8 arrays.
 dbLoadRecords("NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=Image1,ADDR=0,TIMEOUT=1,NDARRAY_PORT=$(PORT),TYPE=Float64,FTVL=DOUBLE,NELEMENTS=800000")
@@ -103,8 +113,8 @@ dbLoadRecords("$(ADCORE)/db/NDFFT.template","P=$(PREFIX),R=FFT8:,PORT=FFT8,ADDR=
 
 
 ## Load all other plugins using commonPlugins.cmd
-#< $(ADCORE)/iocBoot/commonPlugins.cmd
-#set_requestfile_path("$(ADEXAMPLE)/exampleApp/Db")
+< $(ADCORE)/iocBoot/commonPlugins.cmd
+set_requestfile_path("$(PICO8)/pico8App/Db")
 
 #asynSetTraceIOMask("$(PORT)",0,2)
 #asynSetTraceMask("$(PORT)",0,255)
@@ -112,4 +122,4 @@ dbLoadRecords("$(ADCORE)/db/NDFFT.template","P=$(PREFIX),R=FFT8:,PORT=FFT8,ADDR=
 iocInit()
 
 # save things every thirty seconds
-#create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")
+create_monitor_set("auto_settings.req", 30, "P=$(PREFIX)")

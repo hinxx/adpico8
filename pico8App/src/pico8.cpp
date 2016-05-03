@@ -186,17 +186,17 @@ void Pico8::setAcquire(int value) {
 template <typename epicsType> int Pico8::acquireArraysT()
 {
     size_t dims[2];
-    int numPoints;
+    int numTimePoints;
     int count;
     NDDataType_t dataType;
     epicsType *pData;
     int ret;
 
     getIntegerParam(NDDataType, (int *)&dataType);
-    getIntegerParam(Pico8NumPoints, &numPoints);
+    getIntegerParam(Pico8NumTimePoints, &numTimePoints);
 
     dims[0] = PICO8_NR_CHANNELS;
-    dims[1] = numPoints;
+    dims[1] = numTimePoints;
 
     /* device returns proper sample / channel data layout, same as in
      * ADCSimDetector:
@@ -208,9 +208,9 @@ template <typename epicsType> int Pico8::acquireArraysT()
     if (this->pArrays[0]) this->pArrays[0]->release();
     this->pArrays[0] = pNDArrayPool->alloc(2, dims, dataType, 0, 0);
     pData = (epicsType *)this->pArrays[0]->pData;
-    memset(pData, 0, PICO8_NR_CHANNELS * numPoints * sizeof(epicsType));
+    memset(pData, 0, PICO8_NR_CHANNELS * numTimePoints * sizeof(epicsType));
 
-    ret = readDevice(pData, numPoints, &count);
+    ret = readDevice(pData, numTimePoints, &count);
     if (ret == -1) {
     	return ret;
     }
@@ -259,9 +259,11 @@ void Pico8::dataTask(void) {
     int status = asynSuccess;
     NDArray *pImage;
     epicsTimeStamp startTime;
+    epicsTimeStamp frameTime;
     int arrayCounter;
     int i;
     int ret;
+    double elapsed;
 	static const char *functionName = "dataTask";
 
 	sleep(1);
@@ -276,12 +278,15 @@ void Pico8::dataTask(void) {
 
 	printf("%s:%s: Data thread started...\n", driverName, functionName);
 
+	startTime.secPastEpoch = 0;
+
     /* Loop forever */
     while (1) {
         /* Has acquisition been stopped? */
         status = epicsEventTryWait(this->stopEventId_);
         if (status == epicsEventWaitOK) {
             acquiring_ = 0;
+            startTime.secPastEpoch = 0;
         }
         //printf("%s: 1 Acquring = %d..\n", __func__, acquiring_);
 
@@ -310,9 +315,15 @@ void Pico8::dataTask(void) {
         getIntegerParam(NDArrayCounter, &arrayCounter);
         arrayCounter++;
         setIntegerParam(NDArrayCounter, arrayCounter);
-        epicsTimeGetCurrent(&startTime);
-        pImage->timeStamp = startTime.secPastEpoch + startTime.nsec / 1.e9;
+        epicsTimeGetCurrent(&frameTime);
+        pImage->timeStamp = frameTime.secPastEpoch + frameTime.nsec / 1.e9;
         updateTimeStamp(&pImage->epicsTS);
+        if (startTime.secPastEpoch == 0) {
+        	startTime = frameTime;
+        }
+        elapsed = (double)(frameTime.secPastEpoch + frameTime.nsec / 1.e9) -
+        		(double)(startTime.secPastEpoch + startTime.nsec / 1.e9);
+        setDoubleParam(Pico8ElapsedTime, elapsed);
 
         /* Get any attributes that have been defined for this driver */
         this->getAttributes(pImage->pAttributeList);
@@ -483,7 +494,8 @@ Pico8::Pico8(const char *portName, const char *devicePath, int numPoints,
 	openDevice();
 	
     createParam(Pico8AcquireString,          asynParamInt32,       &Pico8Acquire);
-    createParam(Pico8NumPointsString,        asynParamInt32,       &Pico8NumPoints);
+    createParam(Pico8NumTimePointsString,    asynParamInt32,       &Pico8NumTimePoints);
+    createParam(Pico8ElapsedTimeString,      asynParamFloat64,     &Pico8ElapsedTime);
     createParam(Pico8RangeString,            asynParamInt32,       &Pico8Range);
     createParam(Pico8FSampString,            asynParamInt32,       &Pico8FSamp);
     createParam(Pico8BTransString,           asynParamInt32,       &Pico8BTrans);
@@ -497,18 +509,19 @@ Pico8::Pico8(const char *portName, const char *devicePath, int numPoints,
 
 
 	/* Set some default values for parameters */
-	status = setIntegerParam(Pico8Acquire,    0);
-	status |= setIntegerParam(Pico8NumPoints, 1000);
-	status |= setIntegerParam(Pico8Range,     0);
-	status |= setIntegerParam(Pico8FSamp,     100000);
-	status |= setIntegerParam(Pico8BTrans,    0);
-	status |= setIntegerParam(Pico8TrgMode,   0);
-	status |= setIntegerParam(Pico8TrgCh,     0);
-	status |= setIntegerParam(Pico8TrgLevel,  100);
-	status |= setIntegerParam(Pico8TrgLength, 10);
-	status |= setIntegerParam(Pico8RingBuf,   0);
-	status |= setIntegerParam(Pico8GateMux,   0);
-	status |= setIntegerParam(Pico8ConvMux,   0);
+	status = setIntegerParam(Pico8Acquire,        0);
+	status |= setIntegerParam(Pico8NumTimePoints, 1000);
+    status |= setDoubleParam(Pico8ElapsedTime,    0.0);
+	status |= setIntegerParam(Pico8Range,         0);
+	status |= setIntegerParam(Pico8FSamp,         100000);
+	status |= setIntegerParam(Pico8BTrans,        0);
+	status |= setIntegerParam(Pico8TrgMode,       0);
+	status |= setIntegerParam(Pico8TrgCh,         0);
+	status |= setIntegerParam(Pico8TrgLevel,      100);
+	status |= setIntegerParam(Pico8TrgLength,     10);
+	status |= setIntegerParam(Pico8RingBuf,       0);
+	status |= setIntegerParam(Pico8GateMux,       0);
+	status |= setIntegerParam(Pico8ConvMux,       0);
 
 	//	status = setIntegerParam(NDArraySizeX, PICO8_MAX_SAMPLES);
 	//	status |= setIntegerParam(NDArraySizeY, 1);
