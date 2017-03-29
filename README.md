@@ -12,13 +12,13 @@ Web site: http://www.caenels.com/products/amc-pico-8
 Sources:
 
 * <https://bitbucket.org/europeanspallationsource/m-epics-pico8>
-* <https://github.com/CAENels/amc-pico8-driver>
+* <https://bitbucket.org/europeanspallationsource/amc-pico8-driver>; fork of https://github.com/CAENels/amc-pico8-driver
 
-Module uses areaDetector 2.5 features such as NDPluginFFT and NDPluginTimeSeries.
+Module uses areaDetector (>2.5) features such as NDPluginFFT and NDPluginTimeSeries.
 It is based on an ADCSimDetector example provided by ADExample.
 
 It also depends on a Linux kernel driver and user space header provided by
-CAENELS (from github https://github.com/CAENels/amc-pico8-driver).
+CAENELS (in ESS amc-pico8-driver GIT repository).
 
 An IOC is also provided that utilizes this module along with other areaDetector
 plugins that might be useful when working with digitizers (statistics, ROI, ..).
