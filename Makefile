@@ -1,17 +1,17 @@
 #Makefile at top of application tree
 TOP = .
 include $(TOP)/configure/CONFIG
-DIRS := $(DIRS) $(filter-out $(DIRS), configure)
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *App))
-DIRS := $(DIRS) $(filter-out $(DIRS), ioc)
+DIRS += configure
+DIRS += pico8App
+#DIRS += vendor
+#pico8App_DEPEND_DIRS += vendor
 
-define DIR_template
- $(1)_DEPEND_DIRS = configure
-endef
-$(foreach dir, $(filter-out configure,$(DIRS)),$(eval $(call DIR_template,$(dir))))
-
-iocBoot_DEPEND_DIRS += $(filter %App,$(DIRS))
+ifeq ($(BUILD_IOCS), YES)
+DIRS += pico8DemoApp
+pico8DemoApp_DEPEND_DIRS += pico8App
+iocBoot_DEPEND_DIRS += pico8DemoApp
+DIRS += iocBoot
+endif
 
 include $(TOP)/configure/RULES_TOP
-
 
