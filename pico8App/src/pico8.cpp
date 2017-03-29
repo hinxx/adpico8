@@ -157,7 +157,7 @@ int Pico8::setTrigger(float level, int32_t length, int32_t ch, int32_t mode) {
 	val.limit = level;
 	val.nr_samp = length;
 	val.ch_sel = ch;
-	val.mode = (trg_mode)mode;
+	val.mode = (trg_ctrl::mode_t)mode;
 	
 	ret = ioctl(mHandle, SET_TRG, &val);
 	if (ret == -1) {
