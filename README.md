@@ -1,21 +1,24 @@
 # CAENELS AMC PICO8 EPICS support module
 
-_Author: Hinko Kocevar <hinko.kocevar@esss.se>, May 3 2016_
+_Author: Hinko Kocevar <hinko.kocevar@esss.se>_
+_Updated: March 29 2017_
 
 
 This modules provides support for CAENELS AMC PICO8 picoamper meter consisting
 of DAMC-FMC25 and two FMC-pico-1M4 modules.
 
+Web site: http://www.caenels.com/products/amc-pico-8
+
 Sources:
 
 * <https://bitbucket.org/europeanspallationsource/m-epics-pico8>
-* <https://bitbucket.org/europeanspallationsource/amcpicodrv>
+* <https://github.com/CAENels/amc-pico8-driver>
 
 Module uses areaDetector 2.5 features such as NDPluginFFT and NDPluginTimeSeries.
 It is based on an ADCSimDetector example provided by ADExample.
 
 It also depends on a Linux kernel driver and user space header provided by
-CAENELS (packaged as amcpicodrv).
+CAENELS (from github https://github.com/CAENels/amc-pico8-driver).
 
 An IOC is also provided that utilizes this module along with other areaDetector
 plugins that might be useful when working with digitizers (statistics, ROI, ..).
@@ -39,3 +42,4 @@ See also:
 * <http://cars.uchicago.edu/software/epics/ADCSimDetectorDoc.html>
 * <http://www.caenels.com/products/amc-pico-8/>
 * <http://www.caenels.com/products/fmc-pico-1m4/>
+* <https://github.com/CAENels/amc-pico8-driver>
