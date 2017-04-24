@@ -14,7 +14,7 @@ epicsEnvSet("QSIZE",  "20")
 # The maximim image width; used for row profiles in the NDPluginStats plugin
 epicsEnvSet("XSIZE",  "8")
 # The maximim image height; used for column profiles in the NDPluginStats plugin
-epicsEnvSet("YSIZE",  "2000")
+epicsEnvSet("YSIZE",  "100000")
 # The maximum number of time series points in the NDPluginStats plugin
 epicsEnvSet("NCHANS", "2048")
 # The maximum number of time series points in the NDPluginTimeSeries plugin
@@ -62,7 +62,7 @@ epicsEnvSet("EPICS_CA_MAX_ARRAY_BYTES", "10000000")
 #    5=NDUInt32
 #    6=NDFloat32
 #    7=NDFloat64
-Pico8Configure("$(PORT)", "/dev/amc_pico", $(YSIZE), 6, 0, 0, 0, 0)
+Pico8Configure("$(PORT)", "/dev/amc_pico_0000:06:00.0", $(YSIZE), 6, 0, 0, 0, 0)
 dbLoadRecords("$(PICO8)/db/pico8.template",  "P=$(PREFIX),R=det1:,  PORT=$(PORT),ADDR=0,TIMEOUT=1")
 dbLoadRecords("$(PICO8)/db/pico8N.template", "P=$(PREFIX),R=det1:1:,PORT=$(PORT),ADDR=0,TIMEOUT=1,NAME=$(T1)")
 dbLoadRecords("$(PICO8)/db/pico8N.template", "P=$(PREFIX),R=det1:2:,PORT=$(PORT),ADDR=1,TIMEOUT=1,NAME=$(T2)")
