@@ -371,7 +371,7 @@ asynStatus Pico8::writeInt32(asynUser *pasynUser, epicsInt32 value)
         setAcquire(value);
     } else if (function == Pico8Range) {
     	/* XXX: How to collect proper bitfield?!?!*/
-    	assert(1 != 0);
+    	//assert(1 != 0);
     	this->setRange(value);
     } else if (function == Pico8FSamp) {
     	this->setFSamp(value);
@@ -460,7 +460,7 @@ Pico8::Pico8(const char *portName, const char *devicePath, int numPoints,
 			NDDataType_t dataType, int maxBuffers, size_t maxMemory,
 			int priority, int stackSize)
     /* Invoke the base class constructor */
-	: asynNDArrayDriver(portName, PICO8_NR_CHANNELS, NUM_PICO8_PARAMS,
+	: asynNDArrayDriver(portName, PICO8_NR_CHANNELS,
 			maxBuffers, maxMemory,
            0, 0, /* No interfaces beyond those set in ADDriver.cpp */
            ASYN_CANBLOCK | ASYN_MULTIDEVICE, /* asyn flags*/

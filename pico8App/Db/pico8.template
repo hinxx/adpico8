@@ -62,7 +62,7 @@ record(mbbi, "$(P)$(R)Range_RBV")
     field(ZRST, "1 mA")
     field(ZRVL, "0")
     field(ONST, "1 uA")
-    field(ONVL, "1")
+    field(ONVL, "255")
 }
 
 record(mbbo, "$(P)$(R)Range")
@@ -72,7 +72,7 @@ record(mbbo, "$(P)$(R)Range")
     field(ZRST, "1 mA")
     field(ZRVL, "0")
     field(ONST, "1 uA")
-    field(ONVL, "1")
+    field(ONVL, "255")
     info(autosaveFields, "VAL")
 }
 
