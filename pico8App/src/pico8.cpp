@@ -279,6 +279,7 @@ void Pico8::dataTask(void) {
 	printf("%s:%s: Data thread started...\n", driverName, functionName);
 
 	startTime.secPastEpoch = 0;
+	startTime.nsec = 0;
 
     /* Loop forever */
     while (1) {
@@ -287,6 +288,7 @@ void Pico8::dataTask(void) {
         if (status == epicsEventWaitOK) {
             acquiring_ = 0;
             startTime.secPastEpoch = 0;
+        	startTime.nsec = 0;
         }
         //printf("%s: 1 Acquring = %d..\n", __func__, acquiring_);
 
