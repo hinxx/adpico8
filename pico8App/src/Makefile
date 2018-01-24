@@ -20,7 +20,7 @@ pico8_SRCS += pico8.cpp
 
 pico8_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-USR_INCLUDES += -I$(AMCPICODRV)
+USR_INCLUDES += -I$(TOP)/vendor/amc-pico8-driver
 
 include $(ADCORE)/ADApp/commonLibraryMakefile
 
