@@ -57,7 +57,7 @@
 
 
 #if LINUX_VERSION_CODE<KERNEL_VERSION(3,12,0)
-
+#if RHEL_RELEASE_CODE<RHEL_RELEASE_VERSION(7,3)
 #define __ATTRIBUTE_GROUPS(_name)				\
 static const struct attribute_group *_name##_groups[] = {	\
     &_name##_group,						\
@@ -100,6 +100,7 @@ static inline void sysfs_remove_groups(struct kobject *kobj,
     for (i = 0; groups[i]; i++)
         sysfs_remove_group(kobj, groups[i]);
 }
+#endif /* RHEL_RELEASE_CODE<RHEL_RELEASE_VERSION(7,3) */
 #endif /* LINUX_VERSION_CODE<KERNEL_VERSION(3,16,0) */
 
 static
